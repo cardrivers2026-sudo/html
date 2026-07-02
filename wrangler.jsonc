@@ -1,0 +1,30 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "html",
+	"compatibility_date": "2026-05-05",
+	"main": "_worker.js",
+	"observability": {
+		"enabled": true
+	},
+	"assets": {
+		"directory": ".",
+		"binding": "ASSETS"
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"kv_namespaces": [
+		{
+			"binding": "USERS_KV",
+			"id": "1cd8fedad9934dc49be270359c213594"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "ichud_stats",
+			"database_name": "ichud-stats",
+			"database_id": "b33512db-8988-4d8c-9982-bae160275e7e",
+			"remote": true
+		}
+	]
+}

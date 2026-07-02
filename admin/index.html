@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Ichud 5786</title>
+  <link rel="icon" type="image/png" href="https://storage.googleapis.com/ichudb/Ichud%20Logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { background:#120b07; color:#f5e8d0; font-family:'Noto Serif Hebrew',serif; padding:40px 20px; margin:0; }
+    h1 { color:#e8c96a; margin-bottom:8px; text-align:center; }
+    h2 { color:#c9a84c; margin:32px 0 12px; font-size:1.1rem; border-bottom:1px solid rgba(192,112,48,0.3); padding-bottom:8px; }
+    h3 { color:#c9a84c; margin:24px 0 10px; font-size:1rem; }
+    table { width:100%; border-collapse:collapse; margin-bottom:8px; }
+    th { background:rgba(192,112,48,0.2); padding:10px 14px; text-align:left; color:#c9a84c; font-size:0.85rem; }
+    td { padding:10px 14px; border-bottom:1px solid rgba(192,112,48,0.1); vertical-align:middle; }
+    tr:hover td { background:rgba(255,255,255,0.03); }
+    .ts { font-size:0.78rem; color:rgba(245,232,208,0.35); }
+    .empty { color:rgba(245,232,208,0.3); font-size:0.9rem; padding:12px 0; text-align:center; }
+    #loading { color:rgba(245,232,208,0.5); margin:20px 0; text-align:center; }
+    .btn { border:none; border-radius:7px; padding:5px 13px; font-size:0.8rem; cursor:pointer; font-family:inherit; transition:opacity 0.2s; }
+    .btn:hover { opacity:0.8; }
+    .btn:disabled { opacity:0.4; cursor:default; }
+    .btn-approve { background:#2e7d32; color:#fff; margin-right:5px; }
+    .btn-reject  { background:#b71c1c; color:#fff; margin-right:5px; }
+    .btn-remove  { background:rgba(255,255,255,0.1); color:#f5e8d0; }
+    .btn-back { background:rgba(255,255,255,0.1); color:#f5e8d0; padding:6px 15px; }
+    .btn-logout { background:transparent; border:1px solid rgba(232,201,106,0.4); color:#e8c96a; padding:6px 15px; font-size:0.75rem; }
+    .btn-danger { background:#b71c1c; color:#fff; }
+    .btn-success { background:#2e7d32; color:#fff; }
+    .btn-gold { background:rgba(192,112,48,0.3); border:1px solid #c9a84c; color:#e8c96a; }
+
+    /* ── Login overlay ── */
+    #login-overlay {
+      position:fixed; inset:0; background:#120b07; z-index:100;
+      display:flex; align-items:center; justify-content:center; flex-direction:column;
+    }
+    .login-logo { width:min(180px,40vw); margin-bottom:20px; filter:drop-shadow(0 8px 20px rgba(192,112,48,0.3)); }
+    .login-box { display:flex; flex-direction:column; align-items:center; gap:12px; width:300px; }
+    .login-box input {
+      background:rgba(255,255,255,0.05); border:1px solid #c9a84c; color:#fff;
+      padding:12px; border-radius:8px; width:100%; font-size:1rem; font-family:inherit;
+    }
+    .login-box input:disabled { opacity:0.5; }
+    .login-box input::placeholder { color:rgba(245,232,208,0.4); }
+    .google-btn {
+      background:#fff; color:#333; border:none; border-radius:8px; padding:10px 20px;
+      font-size:0.9rem; cursor:pointer; display:flex; align-items:center; gap:8px;
+      width:100%; justify-content:center; font-family:inherit;
+    }
+    .google-btn:hover { background:#f0f0f0; }
+    .google-btn img { width:18px; }
+    .divider { color:rgba(245,232,208,0.4); font-size:0.85rem; display:flex; align-items:center; gap:10px; width:100%; }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:rgba(192,112,48,0.3); }
+    .login-err { color:#ff6b6b; font-size:0.85rem; text-align:center; }
+
+    /* ── Top bar ── */
+    .logout-box { position:absolute; top:20px; right:20px; display:flex; gap:10px; }
+
+    /* ── Dashboard ── */
+    .dashboard-menu {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:20px;
+      max-width:900px; margin:50px auto;
+    }
+    .dashboard-btn {
+      background:rgba(192,112,48,0.15); border:1px solid rgba(201,168,76,0.5);
+      color:#e8c96a; padding:40px 20px; border-radius:12px; font-size:1.1rem;
+      cursor:pointer; transition:all 0.3s; font-family:inherit; text-align:center;
+    }
+    .dashboard-btn:hover { background:rgba(192,112,48,0.3); border-color:#e8c96a; transform:translateY(-3px); }
+    .dashboard-btn .btn-icon { font-size:1.8rem; display:block; margin-bottom:8px; }
+
+    /* ── Section header ── */
+    .header-container {
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid rgba(192,112,48,0.3); margin:32px 0 12px; padding-bottom:8px;
+    }
+    .header-container h2 { border:none; margin:0; padding:0; }
+
+    /* ── Statistics ── */
+    .stats-table-wrap { overflow-y:auto; border:1px solid rgba(192,112,48,0.15); border-radius:8px; }
+    .stats-table-wrap table { width:100%; border-collapse:collapse; margin:0; }
+    .stats-table-wrap thead th { position:sticky; top:0; z-index:2; background:#1e1208; }
+
+    /* ── Manage Home: Password Manager ── */
+    .pm-section { background:rgba(192,112,48,0.07); border:1px solid rgba(192,112,48,0.2); border-radius:10px; padding:20px; margin-bottom:24px; }
+    .pm-section h3 { margin-top:0; }
+    .pm-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .pm-row input {
+      background:rgba(255,255,255,0.05); border:1px solid rgba(192,112,48,0.4); color:#f5e8d0;
+      padding:9px 12px; border-radius:7px; font-family:inherit; font-size:0.9rem;
+    }
+    .pm-row input:disabled { opacity:0.4; }
+    .pass-wrap { position:relative; display:flex; align-items:center; }
+    .pass-wrap input { padding-right:36px; width:200px; }
+    .eye-btn { position:absolute; right:8px; background:none; border:none; color:#c9a84c; cursor:pointer; font-size:0.9rem; padding:0; }
+    .toggle-switch { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+    .switch { position:relative; width:46px; height:24px; }
+    .switch input { display:none; }
+    .slider { position:absolute; inset:0; background:rgba(255,255,255,0.15); border-radius:24px; cursor:pointer; transition:0.3s; }
+    .slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:0.3s; }
+    input:checked + .slider { background:#2e7d32; }
+    input:checked + .slider::before { transform:translateX(22px); }
+
+    /* Password row in list */
+    .pw-list-row { 
+      display:flex; align-items:center; gap:8px; 
+      background:rgba(255,255,255,0.03); border:1px solid rgba(192,112,48,0.15);
+      border-radius:8px; padding:10px 12px; margin-bottom:8px; flex-wrap:wrap;
+    }
+    .pw-list-row select {
+      background:rgba(255,255,255,0.07); border:1px solid rgba(192,112,48,0.3); color:#f5e8d0;
+      padding:5px 8px; border-radius:6px; font-family:inherit; font-size:0.82rem; cursor:pointer;
+    }
+    .pw-list-row select:disabled { opacity:0.3; cursor:default; }
+    .pw-time-boxes { display:flex; gap:6px; align-items:center; }
+    .pw-time-num { 
+      background:rgba(255,255,255,0.07); border:1px solid rgba(192,112,48,0.3); color:#f5e8d0;
+      padding:5px 8px; border-radius:6px; font-family:inherit; font-size:0.82rem; width:60px; text-align:center;
+    }
+    .pw-time-num:disabled { opacity:0.3; }
+    .btn-trash { background:rgba(255,60,60,0.15); border:1px solid rgba(255,60,60,0.4); color:#ff6b6b; border-radius:6px; padding:5px 10px; cursor:pointer; }
+    .btn-trash:hover { background:rgba(255,60,60,0.3); }
+    .add-pw-btn { 
+      background:rgba(192,112,48,0.15); border:1px dashed rgba(192,112,48,0.5); color:#c9a84c;
+      border-radius:8px; padding:10px 20px; width:100%; cursor:pointer; font-family:inherit;
+      font-size:0.9rem; transition:all 0.2s;
+    }
+    .add-pw-btn:hover { background:rgba(192,112,48,0.25); }
+
+    /* ── Delete confirm modal ── */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:200;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .modal-box { background:#1e1208; border:1px solid rgba(192,112,48,0.4); border-radius:12px; padding:28px; max-width:380px; text-align:center; }
+    .modal-box p { margin:0 0 20px; font-size:1rem; }
+    .modal-btns { display:flex; gap:12px; justify-content:center; }
+
+    /* ── Manage Pictures ── */
+    .profile-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin-top:12px; }
+    .profile-card {
+      background:rgba(192,112,48,0.07); border:1px solid rgba(192,112,48,0.2);
+      border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:8px;
+    }
+    .profile-card img { width:100%; max-height:200px; object-fit:cover; border-radius:6px; background:#1a0e06; }
+    .profile-card .no-pic { 
+      width:100%; height:140px; background:rgba(192,112,48,0.1); border-radius:6px;
+      display:flex; align-items:center; justify-content:center; color:rgba(245,232,208,0.4); font-size:0.85rem;
+    }
+    .profile-name { font-size:1rem; color:#e8c96a; font-weight:bold; }
+    .profile-info { font-size:0.82rem; color:rgba(245,232,208,0.6); }
+    .profile-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .btn-dl { background:rgba(192,112,48,0.2); border:1px solid rgba(192,112,48,0.4); color:#e8c96a; border-radius:6px; padding:5px 10px; font-size:0.8rem; cursor:pointer; text-decoration:none; }
+    .btn-apply { background:#2e7d32; color:#fff; border-radius:6px; padding:5px 10px; font-size:0.8rem; cursor:pointer; border:none; font-family:inherit; }
+    .btn-edit { background:rgba(192,112,48,0.2); border:1px solid rgba(192,112,48,0.4); color:#e8c96a; border-radius:6px; padding:5px 10px; font-size:0.8rem; cursor:pointer; font-family:inherit; }
+    .search-bar-wrap { margin-bottom:16px; }
+    .search-bar-wrap input {
+      background:rgba(255,255,255,0.05); border:1px solid rgba(192,112,48,0.4); color:#f5e8d0;
+      padding:10px 14px; border-radius:8px; width:100%; max-width:400px; font-family:inherit; font-size:0.9rem;
+    }
+
+    /* Edit modal for pictures */
+    .edit-pic-modal { max-width:500px; text-align:left; }
+    .edit-pic-row { display:flex; gap:14px; margin-bottom:16px; flex-wrap:wrap; }
+    .edit-pic-slot { flex:1; min-width:180px; }
+    .edit-pic-slot img, .edit-pic-slot .no-pic { width:100%; height:180px; object-fit:cover; border-radius:8px; background:rgba(192,112,48,0.1); display:flex; align-items:center; justify-content:center; color:rgba(245,232,208,0.4); font-size:0.8rem; }
+    .edit-pic-slot label { display:block; text-align:center; font-size:0.8rem; color:#c9a84c; margin-bottom:6px; }
+
+    /* Toast */
+    #toast { 
+      position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+      background:#2e7d32; color:#fff; padding:12px 24px; border-radius:8px;
+      font-size:0.9rem; z-index:300; opacity:0; transition:opacity 0.4s; pointer-events:none;
+    }
+    #toast.show { opacity:1; }
+
+    /* Suggest picture button (for pictures page use, referenced here for completeness) */
+    .suggest-upload-btn {
+      background:rgba(192,112,48,0.15); border:1px solid rgba(192,112,48,0.4);
+      color:#c9a84c; border-radius:8px; padding:8px 16px; font-family:inherit;
+      cursor:pointer; font-size:0.85rem; display:inline-flex; align-items:center; gap:6px; margin-top:8px;
+    }
+
+    @media(max-width:600px) {
+      .dashboard-menu { grid-template-columns:repeat(2,1fr); }
+      .pw-list-row { flex-direction:column; align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login Overlay ── -->
+<div id="login-overlay">
+  <img src="https://storage.googleapis.com/ichudb/Ichud%20Logo.png" class="login-logo" alt="Ichud Logo">
+  <div class="login-box" id="login-box">
+    <div id="login-title" style="color:#e8c96a; font-size:1.1rem; text-align:center; margin-bottom:4px;">Admin Login</div>
+    <input type="text" id="login-name" placeholder="Name" autocomplete="name">
+    <input type="email" id="login-email" placeholder="Email" autocomplete="email">
+    <div id="google-signin-area">
+      <div class="divider">Or continue with Google</div>
+      <button class="google-btn" onclick="startGoogleSignIn()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G">
+        Continue with Google
+      </button>
+    </div>
+    <input type="password" id="admin-pass" placeholder="Password" onkeydown="if(event.key==='Enter') doLogin()">
+    <div id="login-err" class="login-err" style="display:none"></div>
+    <button class="btn btn-approve" style="padding:10px 20px; width:100%;" onclick="doLogin()">Enter</button>
+  </div>
+  <!-- First-time setup -->
+  <div class="login-box" id="setup-box" style="display:none">
+    <div style="color:#e8c96a; font-size:1.1rem; text-align:center; margin-bottom:4px;">Welcome! Please set a password</div>
+    <p style="color:rgba(245,232,208,0.6); font-size:0.85rem; text-align:center; margin:0 0 8px;">No admin password is set yet. Create one to secure the panel.</p>
+    <input type="password" id="setup-pass" placeholder="Set Password">
+    <input type="password" id="setup-pass2" placeholder="Confirm Password">
+    <div id="setup-err" class="login-err" style="display:none"></div>
+    <button class="btn btn-approve" style="padding:10px 20px; width:100%;" onclick="doSetupPassword()">Set Password & Enter</button>
+  </div>
+</div>
+
+<!-- ── Top Bar ── -->
+<div class="logout-box">
+  <button id="notif-btn" class="btn btn-logout" onclick="requestNotifs()">Enable Notifications</button>
+  <button class="btn btn-logout" onclick="logout()">Log out</button>
+</div>
+
+<h1>Ichud Admin Panel</h1>
+<div id="loading">Checking access...</div>
+
+<!-- ── Dashboard ── -->
+<div id="dashboard-menu" class="dashboard-menu" style="display:none">
+  <button class="dashboard-btn" onclick="showSection('manage-users')">
+    <span class="btn-icon">👥</span>Manage Users
+  </button>
+  <button class="dashboard-btn" onclick="showSection('manage-pictures')">
+    <span class="btn-icon">🖼️</span>Manage Pictures
+  </button>
+  <button class="dashboard-btn" onclick="showSection('statistics')">
+    <span class="btn-icon">📊</span>Statistics
+  </button>
+  <button class="dashboard-btn" onclick="showSection('manage-home')">
+    <span class="btn-icon">🏠</span>Manage Home
+  </button>
+  <button class="dashboard-btn">
+    <span class="btn-icon">🔔</span>Update Remind
+  </button>
+  <button class="dashboard-btn">
+    <span class="btn-icon">📢</span>Posting Panel
+  </button>
+</div>
+
+<!-- ── Manage Users ── -->
+<div id="section-manage-users" style="display:none">
+  <div class="header-container">
+    <h2>Manage Users</h2>
+    <button class="btn btn-back" onclick="showDashboard()">← Back</button>
+  </div>
+  <h2>⏳ Pending Requests</h2>
+  <table><thead><tr><th>Name</th><th>Email</th><th>Time</th><th>Actions</th></tr></thead><tbody id="tbody-requests"></tbody></table>
+  <h2>✅ Approved</h2>
+  <table><thead><tr><th>Name</th><th>Email</th><th>Time</th><th>Actions</th></tr></thead><tbody id="tbody-approved"></tbody></table>
+  <h2>❌ Rejected</h2>
+  <table><thead><tr><th>Name</th><th>Email</th><th>Time</th><th>Actions</th></tr></thead><tbody id="tbody-rejected"></tbody></table>
+  <h2>🛡️ Admins</h2>
+  <table><thead><tr><th>Name</th><th>Email</th><th>Time Logged In</th><th>Actions</th></tr></thead><tbody id="tbody-admins"></tbody></table>
+</div>
+
+<!-- ── Statistics ── -->
+<div id="section-statistics" style="display:none">
+  <div class="header-container">
+    <h2>Statistics / Logs</h2>
+    <button class="btn btn-back" onclick="showDashboard()">← Back</button>
+  </div>
+  <div class="stats-table-wrap">
+    <table>
+      <thead><tr><th>User Name</th><th>Email</th><th>Time</th><th>Target Name</th><th>Target ID</th><th>Action</th></tr></thead>
+      <tbody id="tbody-statistics"><tr><td colspan="6" class="empty">Loading logs...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Manage Home ── -->
+<div id="section-manage-home" style="display:none">
+  <div class="header-container">
+    <h2>Manage Home</h2>
+    <button class="btn btn-back" onclick="showDashboard()">← Back</button>
+  </div>
+
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px;">
+    <button class="btn btn-gold" onclick="showHomeTab('password-manager')">🔑 Password Manager</button>
+  </div>
+
+  <!-- Password Manager Tab -->
+  <div id="home-tab-password-manager">
+    <!-- Admin Password Section -->
+    <div class="pm-section">
+      <h3>🔐 Admin Password</h3>
+      <div class="pm-row">
+        <div class="pass-wrap">
+          <input type="password" id="pm-current" placeholder="Current password" class="pm-input">
+          <button class="eye-btn" onclick="toggleVis('pm-current', this)">👁</button>
+        </div>
+        <div class="pass-wrap">
+          <input type="password" id="pm-new" placeholder="New password" class="pm-input">
+          <button class="eye-btn" onclick="toggleVis('pm-new', this)">👁</button>
+        </div>
+        <div class="pass-wrap">
+          <input type="password" id="pm-confirm" placeholder="Confirm new password" class="pm-input">
+          <button class="eye-btn" onclick="toggleVis('pm-confirm', this)">👁</button>
+        </div>
+        <button class="btn btn-approve" onclick="changeAdminPassword()">Save</button>
+      </div>
+      <div id="pm-admin-err" style="color:#ff6b6b; font-size:0.85rem; display:none"></div>
+    </div>
+
+    <!-- Pictures Passwords Section -->
+    <div class="pm-section">
+      <h3>🖼️ Pictures Passwords</h3>
+      <div class="toggle-switch">
+        <label class="switch">
+          <input type="checkbox" id="pics-pw-enabled" onchange="savePicPasswordsEnabled()">
+          <span class="slider"></span>
+        </label>
+        <span id="pics-pw-label" style="font-size:0.9rem; color:#c9a84c;">Passwords Enabled</span>
+      </div>
+      <div id="pic-passwords-list"></div>
+      <button class="add-pw-btn" onclick="addNewPicPassword()">＋ Add a new password</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Manage Pictures ── -->
+<div id="section-manage-pictures" style="display:none">
+  <div class="header-container">
+    <h2>Manage Pictures</h2>
+    <button class="btn btn-back" onclick="showDashboard()">← Back</button>
+  </div>
+
+  <!-- Suggested Pictures sub-section -->
+  <h3 style="color:#e8c96a; font-size:1rem; margin-bottom:12px;">📥 Suggested Pictures</h3>
+  <div id="suggested-grid" class="profile-grid">
+    <div style="color:rgba(245,232,208,0.4); font-size:0.9rem;">Loading...</div>
+  </div>
+
+  <!-- Edit Profiles sub-section -->
+  <div style="margin-top:36px; border-top:1px solid rgba(192,112,48,0.2); padding-top:20px;">
+    <h3 style="color:#e8c96a; font-size:1rem; margin-bottom:12px;">✏️ Edit Profiles</h3>
+    <div class="search-bar-wrap">
+      <input type="text" id="edit-profiles-search" placeholder="Search by name..." oninput="filterEditProfiles()">
+    </div>
+    <div id="edit-profiles-grid" class="profile-grid">
+      <div style="color:rgba(245,232,208,0.4); font-size:0.9rem;">Loading profiles...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirm Modal ── -->
+<div id="delete-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <p id="delete-modal-msg">Are you sure you want to delete this password?</p>
+    <div class="modal-btns">
+      <button class="btn btn-danger" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-success" id="delete-modal-confirm">I'm sure</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Picture Modal ── -->
+<div id="edit-pic-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box edit-pic-modal">
+    <h3 style="margin-top:0; color:#e8c96a" id="edit-pic-name"></h3>
+    <div class="edit-pic-row">
+      <div class="edit-pic-slot">
+        <label>Not Engaged (watermarked)</label>
+        <div id="edit-not-engaged-img"></div>
+        <input type="file" id="upload-not-engaged" accept="image/*" style="display:none" onchange="uploadEditPic(this,'not_engaged')">
+        <button class="btn btn-gold" style="width:100%; margin-top:8px;" onclick="document.getElementById('upload-not-engaged').click()">⬆ Upload New</button>
+      </div>
+      <div class="edit-pic-slot">
+        <label>Main (ichud_jpg)</label>
+        <div id="edit-ichud-img"></div>
+        <input type="file" id="upload-ichud" accept="image/*" style="display:none" onchange="uploadEditPic(this,'ichud_jpg')">
+        <button class="btn btn-gold" style="width:100%; margin-top:8px;" onclick="document.getElementById('upload-ichud').click()">⬆ Upload New</button>
+      </div>
+    </div>
+    <div id="edit-pic-status" style="font-size:0.85rem; color:#8ecfa0; min-height:20px; margin-bottom:10px;"></div>
+    <button class="btn btn-back" onclick="closeEditPicModal()">Close</button>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+const GOOGLE_CLIENT_ID = ''; // Fill in your Google client ID if needed
+let savedPass = sessionStorage.getItem('admin_pass');
+let lastKnownRequestTime = 0;
+let currentAdminName = sessionStorage.getItem('admin_name') || '';
+let currentAdminEmail = sessionStorage.getItem('admin_email') || '';
+let sessionId = sessionStorage.getItem('admin_session_id') || (() => {
+  const id = Math.random().toString(36).slice(2);
+  sessionStorage.setItem('admin_session_id', id);
+  return id;
+})();
+
+let picPasswords = [];
+let picPasswordsEnabled = true;
+let allProfiles = [];
+let suggestedIds = [];
+let editCurrentRowId = null;
+
+// ════════════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════════════
+function fmt(ts) {
+  return new Date(ts).toLocaleString('en-US', {
+    weekday:'short', month:'short', day:'numeric', year:'numeric',
+    hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true
+  });
+}
+
+function showToast(msg, color='#2e7d32', duration=4000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = color;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function toggleVis(inputId, btn) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? '👁' : '🙈';
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(path, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Admin-Password': savedPass},
+    body: JSON.stringify(body)
+  });
+  if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+  return res.json();
+}
+
+async function apiGet(path) {
+  const res = await fetch(path, { headers:{'X-Admin-Password': savedPass} });
+  if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+  return res.json();
+}
+
+// ════════════════════════════════════════════
+//  LOGIN
+// ════════════════════════════════════════════
+async function initLogin() {
+  const res = await fetch('/api/admin/password-status');
+  const data = await res.json();
+  if (!data.hasPassword) {
+    document.getElementById('login-box').style.display = 'none';
+    document.getElementById('setup-box').style.display = 'flex';
+  }
+}
+
+async function doSetupPassword() {
+  const p = document.getElementById('setup-pass').value;
+  const p2 = document.getElementById('setup-pass2').value;
+  const errEl = document.getElementById('setup-err');
+  if (!p) { errEl.textContent = 'Please enter a password'; errEl.style.display='block'; return; }
+  if (p !== p2) { errEl.textContent = 'Passwords do not match'; errEl.style.display='block'; return; }
+  errEl.style.display = 'none';
+  const res = await fetch('/api/admin/set-first-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ password: p })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    savedPass = p;
+    sessionStorage.setItem('admin_pass', p);
+    document.getElementById('login-overlay').style.display = 'none';
+    registerAdminSession();
+    load(true);
+  } else {
+    errEl.textContent = data.error || 'Error setting password';
+    errEl.style.display = 'block';
+  }
+}
+
+function startGoogleSignIn() {
+  // Google One Tap / popup
+  if (window.google) {
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+      callback: handleGoogleCredential
+    });
+    google.accounts.id.prompt();
+  } else {
+    showToast('Google Sign-In not available', '#b71c1c');
+  }
+}
+
+function handleGoogleCredential(response) {
+  try {
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const name = payload.name || '';
+    const email = payload.email || '';
+    fillLoginFromGoogle(name, email);
+  } catch(e) {
+    showToast('Google sign-in failed', '#b71c1c');
+  }
+}
+
+function fillLoginFromGoogle(name, email) {
+  const nameEl = document.getElementById('login-name');
+  const emailEl = document.getElementById('login-email');
+  nameEl.value = name;
+  emailEl.value = email;
+  nameEl.disabled = true;
+  emailEl.disabled = true;
+  document.getElementById('google-signin-area').style.display = 'none';
+}
+
+async function doLogin() {
+  const p = document.getElementById('admin-pass').value;
+  const name = document.getElementById('login-name').value.trim();
+  const email = document.getElementById('login-email').value.trim();
+  const errEl = document.getElementById('login-err');
+  if (!p) { errEl.textContent = 'Please enter your password'; errEl.style.display='block'; return; }
+  if (!name || !email) { errEl.textContent = 'Please fill in name and email'; errEl.style.display='block'; return; }
+
+  // Verify password against server
+  const check = await fetch('/api/admin/requests', { headers:{'X-Admin-Password': p} });
+  if (check.status === 401) {
+    errEl.textContent = 'Incorrect password';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+  savedPass = p;
+  currentAdminName = name;
+  currentAdminEmail = email;
+  sessionStorage.setItem('admin_pass', p);
+  sessionStorage.setItem('admin_name', name);
+  sessionStorage.setItem('admin_email', email);
+  document.getElementById('login-overlay').style.display = 'none';
+  registerAdminSession();
+  load(true);
+}
+
+async function registerAdminSession() {
+  if (!currentAdminName || !currentAdminEmail) return;
+  try {
+    await apiPost('/api/admin/sessions', {
+      name: currentAdminName,
+      email: currentAdminEmail,
+      sessionId
+    });
+  } catch(e) {}
+}
+
+function logout() {
+  // Remove our session from server
+  if (savedPass && currentAdminEmail) {
+    fetch('/api/admin/sessions/logout', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Password': savedPass},
+      body: JSON.stringify({ email: currentAdminEmail })
+    }).catch(()=>{});
+  }
+  sessionStorage.clear();
+  window.location.reload();
+}
+
+async function requestNotifs() {
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    document.getElementById('notif-btn').style.display = 'none';
+    new Notification('Notifications Enabled', { icon:'https://storage.googleapis.com/ichudb/Ichud%20Logo.png' });
+  }
+}
+
+// ════════════════════════════════════════════
+//  SECTION ROUTING
+// ════════════════════════════════════════════
+const allSections = ['manage-users','statistics','manage-home','manage-pictures'];
+
+function hideAllSections() {
+  document.getElementById('dashboard-menu').style.display = 'none';
+  allSections.forEach(s => {
+    const el = document.getElementById('section-' + s);
+    if (el) el.style.display = 'none';
+  });
+}
+
+function showSection(name) {
+  hideAllSections();
+  document.getElementById('section-' + name).style.display = 'block';
+  window.scrollTo(0,0);
+  if (name === 'statistics') initStatistics();
+  if (name === 'manage-home') initManageHome();
+  if (name === 'manage-pictures') initManagePictures();
+  if (name === 'manage-users') loadAdminSessions();
+}
+
+function showDashboard() {
+  hideAllSections();
+  document.getElementById('dashboard-menu').style.display = 'grid';
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════════
+//  MANAGE USERS
+// ════════════════════════════════════════════
+async function load(isFirstLoad = false) {
+  if (!savedPass) return;
+  document.getElementById('login-overlay').style.display = 'none';
+  try {
+    const res = await fetch('/api/admin/requests', { headers:{'X-Admin-Password': savedPass} });
+    if (res.status === 401) { logout(); return; }
+    const text = await res.text();
+    const data = JSON.parse(text);
+    document.getElementById('loading').style.display = 'none';
+    if (document.getElementById('dashboard-menu').style.display === 'none' && 
+        allSections.every(s => document.getElementById('section-'+s).style.display === 'none')) {
+      document.getElementById('dashboard-menu').style.display = 'grid';
+    }
+    if (data.requests && data.requests.length > 0) {
+      const newest = data.requests[0];
+      if (!isFirstLoad && newest.timestamp > lastKnownRequestTime) {
+        if (Notification.permission === 'granted') {
+          new Notification('New User Request', {
+            body: `${newest.name} is waiting for approval.`,
+            icon:'https://storage.googleapis.com/ichudb/Ichud%20Logo.png'
+          });
+        }
+      }
+      lastKnownRequestTime = newest.timestamp;
+    }
+    renderTable('tbody-requests', data.requests || [], 'pending');
+    renderTable('tbody-approved', data.approved || [], 'approved');
+    renderTable('tbody-rejected', data.rejected || [], 'rejected');
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function loadAdminSessions() {
+  try {
+    const data = await apiGet('/api/admin/sessions');
+    const tbody = document.getElementById('tbody-admins');
+    const sessions = data.sessions || [];
+    if (!sessions.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">No admins logged in</td></tr>';
+      return;
+    }
+    tbody.innerHTML = sessions.map(s => `
+      <tr>
+        <td>${escHtml(s.name)}</td>
+        <td>${escHtml(s.email)}</td>
+        <td class="ts">${fmt(s.loginTime)}</td>
+        <td><button class="btn btn-reject" onclick="logoutAdmin('${escHtml(s.email)}')">Log Out</button></td>
+      </tr>
+    `).join('');
+  } catch(e) {}
+}
+
+async function logoutAdmin(email) {
+  await apiPost('/api/admin/sessions/logout', { email });
+  loadAdminSessions();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function addToTable(tbodyId, u, type) {
+  const tbody = document.getElementById(tbodyId);
+  const empty = tbody.querySelector('.empty');
+  if (empty) empty.closest('tr').remove();
+  let act = '';
+  if (type === 'approved') {
+    act = `<button class="btn btn-reject" data-action="reject" data-email="${u.email}" data-name="${u.name}">Reject</button>
+           <button class="btn btn-remove" data-action="remove" data-email="${u.email}" data-from="approved">Remove</button>`;
+  } else if (type === 'rejected') {
+    act = `<button class="btn btn-approve" data-action="approve" data-email="${u.email}" data-name="${u.name}">Approve</button>
+           <button class="btn btn-remove"  data-action="remove"  data-email="${u.email}" data-from="rejected">Remove</button>`;
+  } else {
+    act = `<button class="btn btn-approve" data-action="approve" data-email="${u.email}" data-name="${u.name}">Approve</button>
+           <button class="btn btn-reject"  data-action="reject"  data-email="${u.email}" data-name="${u.name}">Reject</button>`;
+  }
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${u.name}</td><td>${u.email}</td><td class="ts">${fmt(u.timestamp)}</td><td>${act}</td>`;
+  tbody.prepend(tr);
+  tr.querySelectorAll('[data-action]').forEach(b => b.onclick = () => handleUserAction(b));
+}
+
+function renderTable(id, rows, type) {
+  const tb = document.getElementById(id);
+  tb.innerHTML = rows.length ? '' : '<tr><td colspan="4" class="empty">No entries</td></tr>';
+  rows.forEach(u => addToTable(id, u, type));
+}
+
+async function handleUserAction(btn) {
+  const { action, email, name, from } = btn.dataset;
+  const row = btn.closest('tr');
+  row.querySelectorAll('button').forEach(b => b.disabled = true);
+  const doApi = async () => {
+    if (action === 'approve') return apiPost('/api/admin/approve', { email, name });
+    if (action === 'reject')  return apiPost('/api/admin/reject',  { email, name });
+    if (action === 'remove')  return apiPost('/api/admin/remove',  { email, from });
+  };
+  const p = doApi();
+  row.style.transition = 'opacity 0.3s, transform 0.3s';
+  row.style.opacity = '0';
+  row.style.transform = 'translateX(10px)';
+  setTimeout(() => {
+    row.remove();
+    if (action === 'approve') addToTable('tbody-approved', { email, name, timestamp:Date.now() }, 'approved');
+    if (action === 'reject')  addToTable('tbody-rejected', { email, name, timestamp:Date.now() }, 'rejected');
+    ['tbody-requests','tbody-approved','tbody-rejected'].forEach(id => {
+      const tb = document.getElementById(id);
+      if (!tb.children.length) tb.innerHTML = '<tr><td colspan="4" class="empty">No entries</td></tr>';
+    });
+  }, 300);
+  await p;
+}
+
+// ════════════════════════════════════════════
+//  STATISTICS
+// ════════════════════════════════════════════
+async function initStatistics() {
+  window.scrollTo(0,0);
+  setTimeout(() => {
+    const wrap = document.querySelector('.stats-table-wrap');
+    if (!wrap) return;
+    const top = wrap.getBoundingClientRect().top;
+    wrap.style.maxHeight = (window.innerHeight - top - 20) + 'px';
+  }, 0);
+  const tbody = document.getElementById('tbody-statistics');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty">Loading...</td></tr>';
+  try {
+    const data = await apiGet('/api/admin/logs');
+    if (!data.logs || !data.logs.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">No activity found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.logs.map(log => `
+      <tr>
+        <td>${log.name}</td><td>${log.email}</td>
+        <td class="ts">${log.timestamp ? fmt(log.timestamp) : 'N/A'}</td>
+        <td style="color:#e8c96a;font-weight:bold">${log.targetName}</td>
+        <td>${log.targetId}</td>
+        <td style="color:${log.action.includes('Downloaded')?'#8ecfa0':'#d4956a'}">${log.action}</td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty" style="color:#b71c1c">Error: ${e.message}</td></tr>`;
+  }
+}
+
+// ════════════════════════════════════════════
+//  MANAGE HOME: PASSWORD MANAGER
+// ════════════════════════════════════════════
+function showHomeTab(tab) {
+  document.getElementById('home-tab-password-manager').style.display = (tab === 'password-manager') ? 'block' : 'none';
+}
+
+async function initManageHome() {
+  showHomeTab('password-manager');
+  await loadPicPasswords();
+}
+
+async function changeAdminPassword() {
+  const current = document.getElementById('pm-current').value;
+  const newPw = document.getElementById('pm-new').value;
+  const confirm = document.getElementById('pm-confirm').value;
+  const errEl = document.getElementById('pm-admin-err');
+  if (current !== savedPass) { errEl.textContent = 'Current password is wrong'; errEl.style.display='block'; return; }
+  if (!newPw) { errEl.textContent = 'New password cannot be empty'; errEl.style.display='block'; return; }
+  if (newPw !== confirm) { errEl.textContent = 'New passwords do not match'; errEl.style.display='block'; return; }
+  errEl.style.display = 'none';
+  const data = await apiPost('/api/admin/change-password', { newPassword: newPw });
+  if (data.ok) {
+    savedPass = newPw;
+    sessionStorage.setItem('admin_pass', newPw);
+    document.getElementById('pm-current').value = '';
+    document.getElementById('pm-new').value = '';
+    document.getElementById('pm-confirm').value = '';
+    showToast('✅ Admin password updated!');
+  } else {
+    errEl.textContent = data.error || 'Error saving password';
+    errEl.style.display = 'block';
+  }
+}
+
+async function loadPicPasswords() {
+  try {
+    const data = await apiGet('/api/admin/pic-passwords');
+    picPasswords = data.passwords || [];
+    picPasswordsEnabled = data.enabled !== false;
+    document.getElementById('pics-pw-enabled').checked = picPasswordsEnabled;
+    document.getElementById('pics-pw-label').textContent = picPasswordsEnabled ? 'Passwords Enabled' : 'Passwords Disabled';
+    renderPicPasswords();
+  } catch(e) {}
+}
+
+async function savePicPasswordsEnabled() {
+  picPasswordsEnabled = document.getElementById('pics-pw-enabled').checked;
+  document.getElementById('pics-pw-label').textContent = picPasswordsEnabled ? 'Passwords Enabled' : 'Passwords Disabled';
+  await apiPost('/api/admin/pic-passwords', { passwords: picPasswords, enabled: picPasswordsEnabled });
+  showToast(picPasswordsEnabled ? '🔒 Passwords enabled' : '🔓 Passwords disabled');
+}
+
+function renderPicPasswords() {
+  const container = document.getElementById('pic-passwords-list');
+  container.innerHTML = '';
+  picPasswords.forEach((pw, i) => {
+    container.appendChild(buildPwRow(pw, i, false));
+  });
+}
+
+function buildPwRow(pw, index, isNew) {
+  const div = document.createElement('div');
+  div.className = 'pw-list-row';
+  div.id = isNew ? 'new-pw-row' : `pw-row-${index}`;
+
+  const isTmp = pw.mode === 'temporary';
+
+  div.innerHTML = `
+    <div class="pass-wrap">
+      <input type="password" class="pw-input" value="${escHtml(pw.password || '')}" ${isNew?'':'readonly'} placeholder="Password" 
+             id="${isNew?'new-pw-input':'pw-input-'+index}" style="width:180px">
+      <button class="eye-btn" onclick="togglePwVis(this)">👁</button>
+    </div>
+    ${isNew ? `<button class="btn btn-approve" onclick="saveNewPicPassword()">Save</button>` : ''}
+    <select onchange="onModeChange(this, ${index}, ${isNew})" id="${isNew?'new-pw-mode':'pw-mode-'+index}">
+      <option value="on" ${pw.mode==='on'?'selected':''}>On</option>
+      <option value="off" ${pw.mode==='off'?'selected':''}>Off</option>
+      <option value="temporary" ${pw.mode==='temporary'?'selected':''}>Temporary</option>
+    </select>
+    <div class="pw-time-boxes" id="${isNew?'new-pw-time':'pw-time-'+index}">
+      <select id="${isNew?'new-pw-days':'pw-days-'+index}" ${isTmp?'':'disabled'}>
+        ${[0,1,2,3,4,5,6].map(d=>`<option value="${d}" ${pw.days==d?'selected':''}>${d} day${d===1?'':'s'}</option>`).join('')}
+        <option value="7" ${pw.days==7?'selected':''}>1 week</option>
+      </select>
+      <select id="${isNew?'new-pw-hrs':'pw-hrs-'+index}" ${isTmp?'':'disabled'}>
+        ${Array.from({length:24},(_,h)=>`<option value="${h}" ${pw.hours==h?'selected':''}>${h}h</option>`).join('')}
+      </select>
+      <input type="number" min="0" max="59" class="pw-time-num" value="${pw.minutes||0}" id="${isNew?'new-pw-min':'pw-min-'+index}" ${isTmp?'':'disabled'}>
+      <select id="${isNew?'new-pw-unit':'pw-unit-'+index}" ${isTmp?'':'disabled'}>
+        <option value="minutes" ${pw.unit!=='seconds'?'selected':''}>min</option>
+        <option value="seconds" ${pw.unit==='seconds'?'selected':''}>sec</option>
+      </select>
+    </div>
+    ${isNew
+      ? `<button class="btn-trash" onclick="discardNewPicPassword()" title="Discard">✕ Discard</button>`
+      : `<button class="btn-trash" onclick="confirmDeletePicPw(${index})" title="Delete">🗑</button>`
+    }
+  `;
+  return div;
+}
+
+function togglePwVis(btn) {
+  const inp = btn.previousElementSibling;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+
+function onModeChange(sel, index, isNew) {
+  const prefix = isNew ? 'new-pw' : `pw`;
+  const idSuffix = isNew ? '' : `-${index}`;
+  const isTmp = sel.value === 'temporary';
+  const ids = isNew
+    ? ['new-pw-days','new-pw-hrs','new-pw-min','new-pw-unit']
+    : [`pw-days-${index}`,`pw-hrs-${index}`,`pw-min-${index}`,`pw-unit-${index}`];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !isTmp;
+  });
+  if (!isNew) {
+    picPasswords[index].mode = sel.value;
+    savePicPasswordsList();
+  }
+}
+
+function addNewPicPassword() {
+  if (document.getElementById('new-pw-row')) return; // already open
+  const container = document.getElementById('pic-passwords-list');
+  const row = buildPwRow({ password:'', mode:'on', days:0, hours:0, minutes:0, unit:'minutes' }, -1, true);
+  container.appendChild(row);
+  document.getElementById('new-pw-input').focus();
+}
+
+function saveNewPicPassword() {
+  const pw = document.getElementById('new-pw-input').value;
+  if (!pw) { showToast('Please enter a password', '#b71c1c'); return; }
+  const mode = document.getElementById('new-pw-mode').value;
+  const days = parseInt(document.getElementById('new-pw-days').value) || 0;
+  const hours = parseInt(document.getElementById('new-pw-hrs').value) || 0;
+  const minutes = parseInt(document.getElementById('new-pw-min').value) || 0;
+  const unit = document.getElementById('new-pw-unit').value;
+  picPasswords.push({ password: pw, mode, days, hours, minutes, unit });
+  savePicPasswordsList();
+  renderPicPasswords();
+  showToast('✅ Password saved');
+}
+
+function discardNewPicPassword() {
+  const row = document.getElementById('new-pw-row');
+  if (row) row.remove();
+}
+
+async function savePicPasswordsList() {
+  try {
+    await apiPost('/api/admin/pic-passwords', { passwords: picPasswords, enabled: picPasswordsEnabled });
+  } catch(e) {}
+}
+
+let deleteTarget = null;
+function confirmDeletePicPw(index) {
+  deleteTarget = index;
+  document.getElementById('delete-modal-msg').textContent = 'Are you sure you want to delete this password?';
+  document.getElementById('delete-modal-confirm').onclick = () => {
+    picPasswords.splice(deleteTarget, 1);
+    savePicPasswordsList();
+    renderPicPasswords();
+    closeDeleteModal();
+    showToast('🗑 Password deleted');
+  };
+  document.getElementById('delete-modal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-modal').style.display = 'none';
+  deleteTarget = null;
+}
+
+// ════════════════════════════════════════════
+//  MANAGE PICTURES
+// ════════════════════════════════════════════
+async function initManagePictures() {
+  loadSuggestedPictures();
+  loadEditProfiles();
+}
+
+async function loadSuggestedPictures() {
+  const grid = document.getElementById('suggested-grid');
+  grid.innerHTML = '<div style="color:rgba(245,232,208,0.4)">Loading...</div>';
+  try {
+    const data = await apiGet('/api/admin/suggested');
+    suggestedIds = data.ids || [];
+    if (!suggestedIds.length) {
+      grid.innerHTML = '<div style="color:rgba(245,232,208,0.4); font-size:0.9rem;">No suggested pictures at this time.</div>';
+      return;
+    }
+    // Load profile data to show names
+    const profiles = await getProfiles();
+    grid.innerHTML = '';
+    for (const rowId of suggestedIds) {
+      const profile = profiles.find(p => String(p.rowId) === String(rowId));
+      const card = document.createElement('div');
+      card.className = 'profile-card';
+      card.innerHTML = `
+        <img src="/api/admin/suggested/${rowId}" alt="Suggested" onerror="this.style.display='none'">
+        <div class="profile-name">${profile ? escHtml(profile.name) : 'ID: ' + rowId}</div>
+        ${profile ? `<div class="profile-info">${escHtml(profile.info||'')}</div>` : ''}
+        <div class="profile-actions">
+          <a href="/api/admin/suggested/${rowId}" download="${rowId}.jpg" class="btn-dl">⬇ Download</a>
+          <button class="btn-apply" onclick="applySuggestedPic('${rowId}', this)">✅ Apply</button>
+          <button class="btn btn-remove" onclick="deleteSuggestedPic('${rowId}', this)">🗑 Delete</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+  } catch(e) {
+    grid.innerHTML = `<div style="color:#ff6b6b">Error: ${e.message}</div>`;
+  }
+}
+
+async function applySuggestedPic(rowId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Applying...';
+  try {
+    const data = await apiPost('/api/admin/apply-suggested', { rowId });
+    if (data.ok) {
+      showToast('✅ Picture applied to not_engaged bucket!');
+      btn.closest('.profile-card').remove();
+    } else {
+      showToast('Error: ' + (data.error || 'Unknown'), '#b71c1c');
+      btn.disabled = false;
+      btn.textContent = '✅ Apply';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✅ Apply';
+  }
+}
+
+async function deleteSuggestedPic(rowId, btn) {
+  btn.disabled = true;
+  await apiPost('/api/admin/delete-suggested', { rowId });
+  btn.closest('.profile-card').remove();
+  showToast('🗑 Suggestion deleted');
+}
+
+// ── Edit Profiles ──
+async function getProfiles() {
+  if (allProfiles.length) return allProfiles;
+  const SHEET_URL = `https://docs.google.com/spreadsheets/d/1P_Rtjyvqhif9Fv2I3M0Vd9yLLkOlmhv-Hn4bDCSyNYI/gviz/tq?tq=${encodeURIComponent('SELECT A,B,C,D,E,F,G,H')}&headers=1`;
+  const res = await fetch(SHEET_URL);
+  const text = await res.text();
+  const json = JSON.parse(text.substring(47, text.length - 2));
+  allProfiles = json.table.rows.map((row, i) => ({
+    rowId: i + 2,
+    name: row.c[0]?.v || '',
+    father: row.c[1]?.v || '',
+    city: row.c[3]?.v || '',
+    status: row.c[7]?.v || '',
+    info: [row.c[3]?.v, row.c[7]?.v].filter(Boolean).join(' · ')
+  })).filter(p => p.name);
+  return allProfiles;
+}
+
+async function loadEditProfiles() {
+  const grid = document.getElementById('edit-profiles-grid');
+  grid.innerHTML = '<div style="color:rgba(245,232,208,0.4)">Loading...</div>';
+  try {
+    const profiles = await getProfiles();
+    renderEditProfiles(profiles);
+  } catch(e) {
+    grid.innerHTML = `<div style="color:#ff6b6b">Error: ${e.message}</div>`;
+  }
+}
+
+function renderEditProfiles(profiles) {
+  const grid = document.getElementById('edit-profiles-grid');
+  if (!profiles.length) {
+    grid.innerHTML = '<div style="color:rgba(245,232,208,0.4)">No profiles found.</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  profiles.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'profile-card';
+    card.innerHTML = `
+      <img src="/api/img/${p.rowId}" alt="${escHtml(p.name)}" 
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+      <div class="no-pic" style="display:none">No picture</div>
+      <div class="profile-name">${escHtml(p.name)}</div>
+      <div class="profile-info">${escHtml(p.info)}</div>
+      <div class="profile-actions">
+        <a href="/api/img/${p.rowId}" download="${p.rowId}.jpg" class="btn-dl">⬇ Download</a>
+        <button class="btn-edit" onclick='openEditPicModal(${JSON.stringify(p)})'>✏️ Edit</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function filterEditProfiles() {
+  const q = document.getElementById('edit-profiles-search').value.toLowerCase();
+  const filtered = allProfiles.filter(p => p.name.toLowerCase().includes(q));
+  renderEditProfiles(filtered);
+}
+
+function openEditPicModal(profile) {
+  editCurrentRowId = profile.rowId;
+  document.getElementById('edit-pic-name').textContent = profile.name;
+  document.getElementById('edit-pic-status').textContent = '';
+
+  // Not engaged image
+  const ne = document.getElementById('edit-not-engaged-img');
+  ne.innerHTML = `<img src="https://storage.googleapis.com/ichudb/not_engaged/${profile.rowId}.jpg" 
+    onerror="this.outerHTML='<div class=\\'no-pic\\' style=\\'height:180px\\'>No picture</div>'" style="width:100%; height:180px; object-fit:cover; border-radius:8px;">`;
+
+  // Main image
+  const ic = document.getElementById('edit-ichud-img');
+  ic.innerHTML = `<img src="https://storage.googleapis.com/ichudb/ichud_jpg/${profile.rowId}.jpg" 
+    onerror="this.outerHTML='<div class=\\'no-pic\\' style=\\'height:180px\\'>No picture</div>'" style="width:100%; height:180px; object-fit:cover; border-radius:8px;">`;
+
+  document.getElementById('edit-pic-modal').style.display = 'flex';
+}
+
+function closeEditPicModal() {
+  document.getElementById('edit-pic-modal').style.display = 'none';
+  editCurrentRowId = null;
+}
+
+async function uploadEditPic(input, bucket) {
+  if (!input.files[0] || !editCurrentRowId) return;
+  const statusEl = document.getElementById('edit-pic-status');
+  statusEl.textContent = 'Uploading...';
+  statusEl.style.color = '#c9a84c';
+
+  // Upload via suggest endpoint then apply, or direct FormData POST
+  const fd = new FormData();
+  fd.append('rowId', editCurrentRowId);
+  fd.append('picture', input.files[0]);
+  fd.append('bucket', bucket);
+
+  try {
+    const res = await fetch('/api/admin/upload-pic', {
+      method: 'POST',
+      headers: { 'X-Admin-Password': savedPass },
+      body: fd
+    });
+    const data = await res.json();
+    if (data.ok) {
+      statusEl.textContent = '✅ Uploaded successfully!';
+      statusEl.style.color = '#8ecfa0';
+      // Refresh the appropriate image
+      openEditPicModal({ rowId: editCurrentRowId, name: document.getElementById('edit-pic-name').textContent });
+    } else {
+      statusEl.textContent = 'Error: ' + (data.error || 'Upload failed');
+      statusEl.style.color = '#ff6b6b';
+    }
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.style.color = '#ff6b6b';
+  }
+  input.value = '';
+}
+
+// ════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════
+// Check if Google session exists from pictures page
+function checkExistingGoogleSession() {
+  try {
+    const gUser = localStorage.getItem('google_user');
+    if (gUser) {
+      const { name, email } = JSON.parse(gUser);
+      if (name && email) {
+        fillLoginFromGoogle(name, email);
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
+(async function init() {
+  checkExistingGoogleSession();
+  await initLogin();
+  if (savedPass) {
+    load(true);
+  }
+  if (Notification.permission === 'granted') {
+    document.getElementById('notif-btn').style.display = 'none';
+  }
+  setInterval(() => load(false), 30000);
+})();
+</script>
+</body>
+</html>
